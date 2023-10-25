@@ -27,18 +27,16 @@ class libroController{
     } 
     //metodo para borrar
     async delete(req, res){
-        //en caso de que el codigo no funcione porque el parametro sea incorrecto lo solucionamos con try y catch
         try {
-        const libro = req.body;
-        const [result] = await pool.query(`DELETE FROM libros WHERE ISBN=(?)`, [libro.ISBN]);
-        
-       if (result.affectedRows == 0){
-            throw new Error('No se encontro libro con el ISBN indicado');
-        }
-        res.json({"Registros eliminados": result.affectedRows});
-         } catch (error) {
-            console.log(error);
-            res.status(500).json({ error: "Hubo un error al eliminar el libro, compruebe que el isbn este correcto." });  
+            const libro = req.body;
+            const [result] = await pool.query(`DELETE FROM libros WHERE ISBN=(?)`,[libro.ISBN]);
+            if (result.affectedRows === 0) {
+                throw new Error('No se encontró un libro con el ISBN:');
+            }
+            res.json({"Registros eliminados": result.affectedRows});
+        } catch (error) {
+            console.error(error);
+            res.status(500).json({ error: 'Hubo un error al eliminar el libro, compruebe que el ISBN este correcto.'});
         }
     }
     //metodo para actualizar un libro de la lista
@@ -46,14 +44,15 @@ class libroController{
             try {
                 const libro = req.body;
                 const [result] = await pool.query(`UPDATE libros SET nombre=(?), autor=(?), categoria=(?), anhopublicacion=(?), ISBN=(?) WHERE id=(?)`,[libro.nombre, libro.autor, libro.categoria, libro.anhopublicacion, libro.ISBN, libro.id]);
+                console.log('Resultado de la consulta SQL: ', result);
                 if (result.changedRows === 0) {
                     throw new Error('No se encontró un libro con el ID proporcionado o los datos proporcionados ya existen.');
                 }
                 res.json({"Registros Actualizados": result.changedRows});
             } catch (error) {
-                console.error(error);
-                res.status(500).json({ error: 'Hubo un error al actualizar el libro, compruebe los campos requeridos.' });
-            }
+                    console.error('Error capturado: ', error.message);
+                    res.status(500).json({ error: 'Hubo un error al actualizar el libro, compruebe los campos requeridos.' });
+                }
         }
         
     //metodo para obtener un solo dato 
@@ -61,17 +60,16 @@ class libroController{
         try{
             const libro = req.body;
             const id_libro= parseInt(libro.id);
-            //const [result] = await pool.query('SELECT * FROM libros WHERE id=?', [id_libro]);
+            //const [result] = await pool.query(`SELECT * FROM libros WHERE id=?`, [id_libro]);
            const [result] = await pool.query(`SELECT * FROM libros WHERE id=(?)`, [id_libro]);
            res.json(result);
-        } catch (e){
-            console.log("No existen libros con ese ID");
+        } catch (error){
+            console.error(error);
+            res.status(404).json({ error: "No existen libros con ese ID"});
         }
       
     }
   
     }
-   
-
 
 export const libro = new libroController();
