@@ -13,20 +13,30 @@ class libroController{
         }
     }
     //metodo para crear/adherir nuevos libros por parte del usuario
-    async add(req, res)
-    {try {
+
+async add(req, res) {
+    try {
         const libro = req.body;
-        if (!libro.nombre || !libro.autor || !libro.categoria || !libro.anio_publicacion || !libro.isbn) {
+        if (!libro.nombre || !libro.autor || !libro.categoria || !libro.anhopublicacion || !libro.ISBN) {
             res.status(404).json({ error: 'Faltan campos requeridos' });
             return;
         }
-        const [result] = await pool.query(`INSERT INTO libros(nombre, autor, categoria, anio_publicacion, isbn) VALUES (?, ?, ?, ?, ?)`,[libro.nombre, libro.autor, libro.categoria, libro.anio_publicacion, libro.isbn]);
+
+        // Verificar si el libro ya existe
+        const [existing] = await pool.query(`SELECT * FROM libros WHERE ISBN = ?`, [libro.ISBN]);
+        if (existing.length > 0) {
+            res.status(400).json({ error: 'El libro ya está cargado' });
+            return;
+        }
+
+        const [result] = await pool.query(`INSERT INTO libros(nombre, autor, categoria, anhopublicacion, ISBN) VALUES (?, ?, ?, ?, ?)`,[libro.nombre, libro.autor, libro.categoria, libro.anio_publicacion, libro.isbn]);
         res.json({"Id insertado": result.insertId});
     } catch (error) {
         console.error(error);
         res.status(500).json({ error: 'Hubo un error al agregar el libro' });
     }
 }
+
     //metodo para borrar
     async delete(req, res){
         try {
